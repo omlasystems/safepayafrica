@@ -1,3 +1,4 @@
+-- Add keyword detection rules to an existing SAFEPAI schema.
 create table if not exists public.scam_keywords (
   id uuid primary key default gen_random_uuid(),
   keyword text not null unique check (char_length(keyword) between 2 and 100),

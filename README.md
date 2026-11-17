@@ -13,6 +13,7 @@ SAFEPAI Lite is a mobile-friendly web application that helps people review suspi
 - Submit messages, offers, payment instructions, and URLs.
 - Choose an input type, then get a 0–100 preliminary risk score, reasons, and practical next steps.
 - Basic checks run locally on the server before any AI call.
+- The latest eight scans are saved privately in the current browser, so the complete demo flow works without accounts or external credentials. Users can clear this local history at any time; authenticated users use their account-backed history instead.
 
 ### Screenshot Analyzer
 
@@ -69,7 +70,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without credentials, the scanner uses rules-only analysis, and auth-backed history/report submissions are unavailable. The UI explains when Supabase is not configured.
+Open [http://localhost:3000](http://localhost:3000) for the landing page, or [http://localhost:3000/dashboard](http://localhost:3000/dashboard) to use the scanner. Without credentials, the scanner uses rules-only analysis and saves up to eight recent checks in the current browser. Auth-backed history and community-report submissions require Supabase; the UI explains when it is not configured.
 
 ### Two-minute credential-free demo
 
@@ -85,7 +86,7 @@ Terminal 2:
 npm run test:smoke
 ```
 
-Then open `http://localhost:3000`, choose **Investment offer**, paste `Guaranteed 30% returns every day and double your investment in one week.`, and click **Check for scams**. The result uses server-side rules and is explicitly provisional. The smoke script checks the six rules-only API cases; image analysis without an AI key is explicitly unavailable rather than presented as a checked or safe screenshot.
+Then open `http://localhost:3000/dashboard`, choose **Investment offer**, paste `Guaranteed 30% returns every day and double your investment in one week.`, and click **Check for scams**. The result uses server-side rules and is explicitly provisional. The smoke script checks the rules-only API cases; image analysis without an AI key is explicitly unavailable rather than presented as a checked or safe screenshot.
 
 ## Environment variables
 
@@ -102,13 +103,12 @@ Never use a Supabase `service_role` key in this application or expose any AI key
 ## Supabase setup
 
 1. Create a Supabase project.
-2. In the SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql) for a new project. For an existing project, run [`supabase/migrations/20261117_add_scam_keywords.sql`](./supabase/migrations/20261117_add_scam_keywords.sql).
-   Client roles can read active rules but cannot edit them; manage rule changes through the Supabase SQL Editor.
+2. Apply the versioned migrations using `supabase db push`, or run [`supabase/schema.sql`](./supabase/schema.sql) once in the SQL Editor. For an existing project, run [`supabase/migrations/20261117140437_add_scam_keywords.sql`](./supabase/migrations/20261117140437_add_scam_keywords.sql) to add the keyword rules. Client roles can read active rules but cannot edit them; manage rule changes through the Supabase SQL Editor.
 3. Configure the Supabase URL and anon/publishable key in `.env.local` and in Vercel project settings.
 4. Configure Supabase Auth email sign-in and allowed redirect URLs for localhost and the deployed domain.
 5. Test signup, signin, signout, scan history, and report submission using two different users to verify data isolation.
 
-New reports are unverified. Review reports and supporting evidence through a separate trusted moderation process before changing status or publishing indicators.
+New reports are unverified. Review reports and supporting evidence through a separate trusted moderation process before changing status or publishing indicators. The schema is idempotent for repeat SQL Editor runs and enforces Row Level Security: users can only read or insert their own scans and reports, while anonymous checks can read only reviewed indicators.
 
 ## How an analysis works
 
@@ -142,6 +142,17 @@ The initial public-source set is deliberately small and curated. It includes the
 4. Add downloadable incident reports and safety guidance.
 5. Before production, add shared rate limiting, moderation, observability, privacy/retention controls, accessibility review, and deployment testing.
 
+## Credential-free scanner flow
+
+The scanner is usable immediately after installation:
+
+1. Paste a message, URL, investment offer, or payment request and select its type.
+2. Select **Check for scams** to receive an explainable, provisional rules-based assessment.
+3. Review the risk score, warning signs, and safer next steps.
+4. The scan appears in **Recent scan history** on the same browser. Use **Clear local history** to remove those local entries.
+
+When Supabase is configured and the user is signed in, scans are saved to the account instead of browser-only history.
+
 ## Scripts
 
 ```bash
@@ -153,7 +164,7 @@ npm run build     # production build
 
 ## Deployment
 
-Import the repository into Vercel, configure the environment variables above, and deploy. Apply the Supabase schema before enabling account-backed features. Set Supabase Auth's site URL and redirect allowlist to the deployed origin. Keep the AI API key as a server-only Vercel environment variable and redeploy after changing variables.
+Import the repository into Vercel, configure the environment variables above, and deploy. Apply the Supabase migration before enabling account-backed features. Set Supabase Auth's site URL and redirect allowlist to the deployed origin. Keep the AI API key as a server-only Vercel environment variable and redeploy after changing variables.
 
 ## Project layout
 
@@ -162,10 +173,13 @@ app/
   api/analyze/route.ts    # rules-first, optional AI analysis endpoint
   globals.css             # Tailwind and SAFEPAI visual system
   layout.tsx
-  page.tsx                # scanner, history, alerts, reporting UI
+  page.tsx                # public landing page
+  dashboard/
+    page.tsx              # scanner, history, alerts, reporting UI
 lib/
   analysis.ts             # shared score types and validation
   detection.ts            # deterministic local detection rules
   supabase.ts             # browser Supabase client
 supabase/schema.sql       # tables, triggers, and RLS policies
+supabase/migrations/      # versioned Supabase database migrations
 ```

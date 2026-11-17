@@ -28,7 +28,7 @@ SAFEPAI Lite is a mobile-friendly web application that helps people review suspi
 - Checks submitted URLs for unsafe schemes, IP-address hosts, misleading hostnames, and common URL shorteners; it does not fetch or crawl the submitted URL.
 - Can compare URLs and phone numbers with indicators whose status is `evidence_supported` or `independently_verified`. Unverified reports are never treated as confirmed matches.
 - Matches a small, source-linked set of public records: Nigerian SEC notices and a Daily Post Nigeria report of a 2023 Nigeria Police Force wanted notice concerning Chinmark Group's CEO. The Chinmark item reports allegations and a wanted notice, not a finding of guilt; its current case status is unknown. A name match does not prove that a submitted offer or sender is connected, and never marks the entity or report as verified.
-- Calls one configurable OpenAI-compatible multimodal Chat Completions endpoint only for suspicious or ambiguous submissions.
+- Calls Gemini when `GOOGLE_API_KEY` is configured, otherwise an optional OpenAI-compatible multimodal endpoint, only for suspicious or ambiguous submissions.
 - Validates the returned JSON before using it. If AI is not configured, unavailable, or returns invalid data, the API provides a clearly marked provisional, rules-only result.
 - Uses a short-lived, process-local cache keyed by a SHA-256 digest. The cache is not durable across serverless instances.
 
@@ -57,7 +57,7 @@ The Supabase SQL setup creates `users`, `scans`, `scam_reports`, `scam_indicator
 - Next.js App Router and API routes
 - TypeScript and Tailwind CSS
 - Supabase Auth and Postgres (optional until environment variables are configured)
-- One optional OpenAI-compatible multimodal Chat Completions API
+- One optional Gemini or OpenAI-compatible multimodal API
 - Vercel deployment target
 
 ## Run locally
@@ -94,7 +94,10 @@ Then open `http://localhost:3000/dashboard`, choose **Investment offer**, paste 
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | For auth and database | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | For auth and database | Supabase publishable/anon key; protected by RLS |
-| `AI_API_KEY` | No | Secret key for the optional AI provider; server-side only |
+| `GOOGLE_API_KEY` | No | Gemini API key; server-side only and preferred when configured |
+| `GOOGLE_MODEL` | No | Gemini model name; defaults to `gemini-flash-latest` |
+| `GOOGLE_AI_BASE_URL` | No | Gemini API base URL; defaults to `https://generativelanguage.googleapis.com/v1beta` |
+| `AI_API_KEY` | No | Secret key for an optional OpenAI-compatible fallback provider; server-side only |
 | `AI_BASE_URL` | No | OpenAI-compatible API base URL; defaults to `https://api.openai.com/v1` |
 | `AI_MODEL` | No | Vision-capable model name; defaults to `gpt-4o-mini` |
 

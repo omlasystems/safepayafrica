@@ -44,6 +44,9 @@ type HistoryItem = {
 };
 type SelectedImage = { file: File; preview: string };
 
+const LOCAL_HISTORY_KEY = "safepai-lite-local-scans";
+const LOCAL_HISTORY_LIMIT = 8;
+
 const scanTypes: Array<{ value: InputType; label: string; icon: typeof MessageSquareText; placeholder: string }> = [
   {
     value: "message",
@@ -79,6 +82,31 @@ function levelLabel(level: RiskLevel) {
 
 function RiskBadge({ level }: { level: RiskLevel }) {
   return <span className={`risk-badge risk-${level}`}>{levelLabel(level)} risk</span>;
+}
+
+function readLocalHistory(): HistoryItem[] {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(LOCAL_HISTORY_KEY) ?? "[]") as unknown;
+    if (!Array.isArray(saved)) return [];
+    return saved.filter((item): item is HistoryItem => {
+      if (!item || typeof item !== "object") return false;
+      const scan = item as Record<string, unknown>;
+      return (
+        typeof scan.id === "string" &&
+        ["message", "website", "investment", "payment"].includes(String(scan.input_type)) &&
+        typeof scan.submitted_content === "string" &&
+        typeof scan.risk_score === "number" &&
+        ["low", "moderate", "high", "very_high"].includes(String(scan.risk_level)) &&
+        typeof scan.created_at === "string"
+      );
+    }).slice(0, LOCAL_HISTORY_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalHistory(items: HistoryItem[]) {
+  window.localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(items.slice(0, LOCAL_HISTORY_LIMIT)));
 }
 
 function downloadReport(
@@ -129,6 +157,7 @@ export default function Home() {
   const supabase = useMemo(() => getSupabase(), []);
   const [user, setUser] = useState<User | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [localHistory, setLocalHistory] = useState<HistoryItem[]>([]);
   const [savedScans, setSavedScans] = useState(0);
   const [reportCount, setReportCount] = useState(0);
   const [inputType, setInputType] = useState<InputType>("message");
@@ -155,6 +184,11 @@ export default function Home() {
   });
   const fileInput = useRef<HTMLInputElement>(null);
   const selectedType = scanTypes.find((type) => type.value === inputType) ?? scanTypes[0];
+
+  useEffect(() => {
+    const loadSavedHistory = window.setTimeout(() => setLocalHistory(readLocalHistory()), 0);
+    return () => window.clearTimeout(loadSavedHistory);
+  }, []);
 
   const loadHistory = useCallback(async (userId: string) => {
     if (!supabase) return;
@@ -286,6 +320,20 @@ export default function Home() {
           setSavedScans((count) => count + 1);
           void loadHistory(user.id);
         }
+      } else {
+        const item: HistoryItem = {
+          id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          input_type: body.inputType,
+          submitted_content: body.content,
+          risk_score: analysis.risk_score,
+          risk_level: analysis.risk_level,
+          created_at: new Date().toISOString(),
+        };
+        setLocalHistory((current) => {
+          const next = [item, ...current].slice(0, LOCAL_HISTORY_LIMIT);
+          saveLocalHistory(next);
+          return next;
+        });
       }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The scan could not be completed.");
@@ -358,8 +406,16 @@ export default function Home() {
     setNotice("Report submitted as unverified. Thank you for helping others stay alert.");
   };
 
-  const scansToday = history.filter((item) => new Date(item.created_at).toDateString() === new Date().toDateString()).length;
-  const suspiciousCount = history.filter((item) => item.risk_score >= 30).length;
+  const displayedHistory = user ? history : localHistory;
+  const scanCount = user ? savedScans : localHistory.length;
+  const scansToday = displayedHistory.filter((item) => new Date(item.created_at).toDateString() === new Date().toDateString()).length;
+  const suspiciousCount = displayedHistory.filter((item) => item.risk_score >= 30).length;
+
+  const clearLocalHistory = () => {
+    window.localStorage.removeItem(LOCAL_HISTORY_KEY);
+    setLocalHistory([]);
+    setNotice("Local scan history cleared from this browser.");
+  };
 
   return (
     <div className="app-shell">
@@ -421,13 +477,13 @@ export default function Home() {
           <section className="stats-grid" aria-label="Your activity">
             <div className="stat-card">
               <div className="stat-top"><span>Total scans</span><span className="stat-icon mint-icon"><ScanSearch size={17} /></span></div>
-              <div className="stat-value">{savedScans}<span className="stat-caption">{user ? "Saved to your account" : "Sign in to save scans"}</span></div>
+              <div className="stat-value">{scanCount}<span className="stat-caption">{user ? "Saved to your account" : "Saved on this device"}</span></div>
               <div className="stat-foot"><span className="stat-foot-dot green-dot" /> {scansToday} scanned today</div>
             </div>
             <div className="stat-card">
               <div className="stat-top"><span>Suspicious detected</span><span className="stat-icon amber-icon"><TriangleAlert size={17} /></span></div>
               <div className="stat-value">{suspiciousCount}<span className="stat-caption">Preliminary warning signs</span></div>
-              <div className="stat-foot"><span className="stat-foot-dot amber-dot" /> Based on your saved scans</div>
+              <div className="stat-foot"><span className="stat-foot-dot amber-dot" /> Based on your recent scans</div>
             </div>
             <div className="stat-card">
               <div className="stat-top"><span>Community reports</span><span className="stat-icon blue-icon"><FileText size={17} /></span></div>
@@ -572,10 +628,10 @@ export default function Home() {
           </div>
 
           <section className="history-card" id="history">
-            <div className="history-heading"><div><div className="section-title-icon"><Clock3 size={17} /></div><div><h2>Recent scan history</h2><p>Your latest saved checks</p></div></div><a href="#scanner">New scan <ArrowRight size={14} /></a></div>
-            {history.length ? (
+            <div className="history-heading"><div><div className="section-title-icon"><Clock3 size={17} /></div><div><h2>Recent scan history</h2><p>{user ? "Your latest saved checks" : "Saved only in this browser"}</p></div></div><div className="history-actions">{!user && localHistory.length > 0 && <button type="button" onClick={clearLocalHistory}>Clear local history</button>}<a href="#scanner">New scan <ArrowRight size={14} /></a></div></div>
+            {displayedHistory.length ? (
               <div className="history-table">
-                {history.slice(0, 5).map((item) => (
+                {displayedHistory.slice(0, 5).map((item) => (
                   <div className="history-row" key={item.id}>
                     <span className="history-type-icon">{item.input_type === "website" ? <Globe2 size={16} /> : item.input_type === "payment" ? <WalletCards size={16} /> : <MessageSquareText size={16} />}</span>
                     <div className="history-summary"><strong>{item.submitted_content.slice(0, 72) || "Screenshot analysis"}{item.submitted_content.length > 72 ? "…" : ""}</strong><span>{item.input_type} · {formatDate(item.created_at)}</span></div>
@@ -584,7 +640,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="empty-history"><div><History size={20} /></div><strong>{user ? "Your recent scans will appear here" : "Sign in to keep your scans together"}</strong><span>{user ? "Run your first scan and it will be saved here." : "You can scan without an account. Sign in to save your history privately."}</span></div>
+              <div className="empty-history"><div><History size={20} /></div><strong>Your recent scans will appear here</strong><span>{user ? "Run your first scan and it will be saved here." : "Run a scan to save it on this device. Sign in to keep history with your account."}</span></div>
             )}
           </section>
 

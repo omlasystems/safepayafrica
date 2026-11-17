@@ -192,7 +192,10 @@ h1 span { color: #00a978; }
 .history-heading { align-items: center; display: flex; justify-content: space-between; }
 .history-heading > div { align-items: center; display: flex; gap: 10px; }
 .section-title-icon { align-items: center; background: #f0f4fa; border-radius: 7px; color: #7085a8; display: flex; height: 32px; justify-content: center; width: 32px; }
-.history-heading > a { align-items: center; color: #168563; display: flex; font-size: 9px; font-weight: 700; gap: 5px; }
+.history-actions { align-items: center; display: flex; gap: 12px; }
+.history-heading > .history-actions > a, .history-actions > button { align-items: center; background: transparent; border: 0; color: #168563; display: flex; font-size: 9px; font-weight: 700; gap: 5px; padding: 3px 0; }
+.history-actions > button { color: #718097; }
+.history-actions > button:hover { color: #b85a4c; }
 .history-table { margin-top: 13px; }
 .history-row { align-items: center; border-top: 1px solid #f0f2f5; display: flex; gap: 11px; min-height: 49px; }
 .history-type-icon { align-items: center; background: #f4f6f9; border-radius: 7px; color: #71839d; display: flex; height: 30px; justify-content: center; width: 30px; }
@@ -299,6 +302,7 @@ h1 span { color: #00a978; }
   .safety-card { padding: 17px; }
   .signals-card { padding: 14px 15px; }
   .history-card { padding: 14px 12px; }
+  .history-actions { gap: 8px; }
   .history-row { gap: 7px; }
   .history-summary strong { max-width: 135px; }
   .history-row .risk-badge { font-size: 7px; padding: 5px 6px; }

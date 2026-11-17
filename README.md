@@ -13,6 +13,7 @@ SAFEPAI Lite is a mobile-friendly web application that helps people review suspi
 - Submit messages, offers, payment instructions, and URLs.
 - Choose an input type, then get a 0–100 preliminary risk score, reasons, and practical next steps.
 - Basic checks run locally on the server before any AI call.
+- The latest eight scans are saved privately in the current browser, so the complete demo flow works without accounts or external credentials. Users can clear this local history at any time; authenticated users use their account-backed history instead.
 
 ### Screenshot Analyzer
 
@@ -67,7 +68,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without credentials, the scanner uses rules-only analysis, and auth-backed history/report submissions are unavailable. The UI explains when Supabase is not configured.
+Open [http://localhost:3000](http://localhost:3000). Without credentials, the scanner uses rules-only analysis and saves up to eight recent checks in the current browser. Auth-backed history and community-report submissions require Supabase; the UI explains when it is not configured.
 
 ### Two-minute credential-free demo
 
@@ -136,6 +137,17 @@ The included API rate limiter and analysis cache are process-local starter prote
 3. Configure Supabase Auth, RLS-protected scan history, and unverified community reports.
 4. Add downloadable incident reports and safety guidance.
 5. Before production, add shared rate limiting, moderation, observability, privacy/retention controls, accessibility review, and deployment testing.
+
+## Credential-free scanner flow
+
+The scanner is usable immediately after installation:
+
+1. Paste a message, URL, investment offer, or payment request and select its type.
+2. Select **Check for scams** to receive an explainable, provisional rules-based assessment.
+3. Review the risk score, warning signs, and safer next steps.
+4. The scan appears in **Recent scan history** on the same browser. Use **Clear local history** to remove those local entries.
+
+When Supabase is configured and the user is signed in, scans are saved to the account instead of browser-only history.
 
 ## Scripts
 

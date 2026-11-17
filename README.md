@@ -101,12 +101,12 @@ Never use a Supabase `service_role` key in this application or expose any AI key
 ## Supabase setup
 
 1. Create a Supabase project.
-2. In the SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql).
+2. Apply the versioned migration at [`supabase/migrations/20261117000000_initial_schema.sql`](./supabase/migrations/20261117000000_initial_schema.sql) using `supabase db push`, or run [`supabase/schema.sql`](./supabase/schema.sql) once in the SQL Editor.
 3. Configure the Supabase URL and anon/publishable key in `.env.local` and in Vercel project settings.
 4. Configure Supabase Auth email sign-in and allowed redirect URLs for localhost and the deployed domain.
 5. Test signup, signin, signout, scan history, and report submission using two different users to verify data isolation.
 
-New reports are unverified. Review reports and supporting evidence through a separate trusted moderation process before changing status or publishing indicators.
+New reports are unverified. Review reports and supporting evidence through a separate trusted moderation process before changing status or publishing indicators. The schema is idempotent for repeat SQL Editor runs and enforces Row Level Security: users can only read or insert their own scans and reports, while anonymous checks can read only reviewed indicators.
 
 ## How an analysis works
 
@@ -160,7 +160,7 @@ npm run build     # production build
 
 ## Deployment
 
-Import the repository into Vercel, configure the environment variables above, and deploy. Apply the Supabase schema before enabling account-backed features. Set Supabase Auth's site URL and redirect allowlist to the deployed origin. Keep the AI API key as a server-only Vercel environment variable and redeploy after changing variables.
+Import the repository into Vercel, configure the environment variables above, and deploy. Apply the Supabase migration before enabling account-backed features. Set Supabase Auth's site URL and redirect allowlist to the deployed origin. Keep the AI API key as a server-only Vercel environment variable and redeploy after changing variables.
 
 ## Project layout
 
@@ -177,4 +177,5 @@ lib/
   detection.ts            # deterministic local detection rules
   supabase.ts             # browser Supabase client
 supabase/schema.sql       # tables, triggers, and RLS policies
+supabase/migrations/      # versioned Supabase database migrations
 ```

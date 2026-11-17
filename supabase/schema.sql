@@ -76,24 +76,32 @@ alter table public.scans enable row level security;
 alter table public.scam_reports enable row level security;
 alter table public.scam_indicators enable row level security;
 
+drop policy if exists "Users can read their own profile" on public.users;
 create policy "Users can read their own profile" on public.users
   for select to authenticated using ((select auth.uid()) = id);
+drop policy if exists "Users can update their own profile" on public.users;
 create policy "Users can update their own profile" on public.users
   for update to authenticated using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 
+drop policy if exists "Users can read their own scans" on public.scans;
 create policy "Users can read their own scans" on public.scans
   for select to authenticated using ((select auth.uid()) = user_id);
+drop policy if exists "Users can create their own scans" on public.scans;
 create policy "Users can create their own scans" on public.scans
   for insert to authenticated with check ((select auth.uid()) = user_id);
 
+drop policy if exists "Users can read their own reports" on public.scam_reports;
 create policy "Users can read their own reports" on public.scam_reports
   for select to authenticated using ((select auth.uid()) = user_id);
+drop policy if exists "Users can create their own reports" on public.scam_reports;
 create policy "Users can create their own reports" on public.scam_reports
   for insert to authenticated with check ((select auth.uid()) = user_id);
 
+drop policy if exists "Authenticated users can check reviewed indicators" on public.scam_indicators;
 create policy "Authenticated users can check reviewed indicators" on public.scam_indicators
   for select to authenticated
   using (verification_status in ('evidence_supported', 'independently_verified'));
+drop policy if exists "Public can check reviewed indicators" on public.scam_indicators;
 create policy "Public can check reviewed indicators" on public.scam_indicators
   for select to anon
   using (verification_status in ('evidence_supported', 'independently_verified'));
@@ -104,3 +112,5 @@ grant select, insert on public.scans to authenticated;
 grant select, insert on public.scam_reports to authenticated;
 grant select on public.scam_indicators to authenticated;
 grant select on public.scam_indicators to anon;
+
+revoke execute on function public.handle_new_user() from public;

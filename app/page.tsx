@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Activity,
   ArrowDown,
   ArrowRight,
   BadgeCheck,
@@ -13,14 +14,15 @@ import {
   ScanSearch,
   Shield,
   ShieldCheck,
+  Sparkles,
   WalletCards,
 } from "lucide-react";
 
 const checks = [
-  { icon: MessageSquareText, title: "Messages", detail: "SMS, WhatsApp, and email" },
-  { icon: Globe2, title: "Websites", detail: "Links and suspicious domains" },
-  { icon: ScanSearch, title: "Investments", detail: "Offers and return promises" },
-  { icon: WalletCards, title: "Payments", detail: "Requests and payment instructions" },
+  { icon: MessageSquareText, title: "Messages", detail: "SMS, WhatsApp, and email", color: "mint" },
+  { icon: Globe2, title: "Websites", detail: "Links and suspicious domains", color: "blue" },
+  { icon: ScanSearch, title: "Investments", detail: "Offers and return promises", color: "gold" },
+  { icon: WalletCards, title: "Payments", detail: "Requests and payment instructions", color: "violet" },
 ];
 
 export default function LandingPage() {
@@ -28,7 +30,7 @@ export default function LandingPage() {
     <main className="landing-page">
       <header className="landing-nav">
         <Link className="landing-brand" href="/" aria-label="SAFEPAI home">
-          <span className="landing-brand-mark"><ShieldCheck size={21} strokeWidth={2.2} /></span>
+          <span className="landing-brand-mark"><ShieldCheck size={20} strokeWidth={2.5} /></span>
           <span>safe<span>pai</span><small>LITE</small></span>
         </Link>
         <nav className="landing-links" aria-label="Main navigation">
@@ -43,34 +45,39 @@ export default function LandingPage() {
       </header>
 
       <section className="landing-hero">
+        <div className="hero-grid-glow" aria-hidden="true" />
         <div className="hero-copy">
-          <div className="hero-kicker"><span /> A little more confidence, before you click</div>
-          <h1>Pause the pressure.<br /><span>Check before</span> you pay.</h1>
+          <div className="hero-kicker"><Sparkles size={13} /> CALM, CLEARER CHECKS</div>
+          <h1>Confidence before<br /><span>your next move.</span></h1>
           <p className="hero-description">
-            Get a clearer view of suspicious messages, websites, investment offers, and payment requests—with practical next steps to help you stay in control.
+            Check a suspicious message, link, investment offer, or payment request before you share information or send money.
           </p>
           <div className="hero-actions">
-            <Link className="landing-primary-button" href="/dashboard#scanner">Check something suspicious <ArrowRight size={17} /></Link>
-            <a className="landing-secondary-button" href="#how-it-works"><span><ArrowDown size={15} /></span> See how it works</a>
+            <Link className="landing-primary-button" href="/dashboard#scanner">Check something now <ArrowRight size={17} /></Link>
+            <a className="landing-secondary-button" href="#how-it-works"><span><ArrowDown size={15} /></span> How it works</a>
           </div>
           <div className="hero-assurance">
             <span><Check size={14} /> Free to use</span>
-            <span><Check size={14} /> No account needed to scan</span>
+            <span><Check size={14} /> No account needed</span>
             <span><LockKeyhole size={13} /> Private by design</span>
+          </div>
+          <div className="hero-proof">
+            <div className="proof-avatars" aria-hidden="true"><i>J</i><i>M</i><i>A</i><i>+</i></div>
+            <p><strong>Built for the moments that matter.</strong><span>Pause, check, then choose your next step.</span></p>
           </div>
         </div>
 
         <div className="hero-visual" aria-label="Example SAFEPAI scam check">
           <div className="hero-orbit orbit-one" /><div className="hero-orbit orbit-two" />
-          <div className="floating-note note-top"><span><ShieldCheck size={16} /></span><div><strong>Take a moment</strong><small>Check before you act</small></div></div>
+          <div className="floating-note note-top"><span><Activity size={16} /></span><div><strong>Live warning check</strong><small>Signals explained clearly</small></div></div>
           <div className="preview-card">
-            <div className="preview-topline"><span className="preview-brand-icon"><Shield size={15} /></span><span>SAFEPAI CHECK</span><span className="preview-dots">•••</span></div>
+            <div className="preview-topline"><span className="preview-brand-icon"><Shield size={15} /></span><span>SAFEPAI CHECK</span><span className="preview-dots">...</span></div>
             <div className="preview-label">INVESTMENT OFFER <span>JUST NOW</span></div>
-            <div className="preview-message">“Guaranteed 30% returns every day. Double your investment in one week!”</div>
+            <div className="preview-message">&ldquo;Guaranteed 30% returns every day. Double your investment in one week!&rdquo;</div>
             <div className="preview-divider" />
             <div className="preview-result">
               <span className="preview-warning"><Shield size={18} /></span>
-              <div><strong>Pause — warning signs found</strong><small>Preliminary check · Not proof of fraud</small></div>
+              <div><strong>Pause - warning signs found</strong><small>Preliminary check, not proof of fraud</small></div>
               <span className="preview-score">82<small>/100</small></span>
             </div>
             <div className="preview-progress"><span /></div>
@@ -91,13 +98,13 @@ export default function LandingPage() {
       <section className="landing-checks section-wrap" id="what-we-check">
         <div className="section-intro">
           <span className="landing-eyebrow">ONE PLACE TO CHECK</span>
-          <h2>When something feels off,<br />start with a second look.</h2>
-          <p>Paste a message or link, or describe the offer. SAFEPAI looks for common warning signs and suggests safer next steps.</p>
+          <h2>When something feels off,<br />take a second look.</h2>
+          <p>Paste a message or link, or describe the offer. SAFEPAI highlights common warning signs and suggests safer next steps.</p>
         </div>
         <div className="check-grid">
-          {checks.map(({ icon: Icon, title, detail }, index) => (
+          {checks.map(({ icon: Icon, title, detail, color }) => (
             <article className="check-card" key={title}>
-              <span className={`check-card-icon check-icon-${index}`}><Icon size={20} /></span>
+              <span className={`check-card-icon check-icon-${color}`}><Icon size={20} /></span>
               <h3>{title}</h3><p>{detail}</p><span className="check-arrow"><ArrowRight size={16} /></span>
             </article>
           ))}
@@ -109,7 +116,7 @@ export default function LandingPage() {
           <div className="section-intro">
             <span className="landing-eyebrow">A SIMPLE CHECK</span>
             <h2>Three steps.<br />No pressure.</h2>
-            <p>Use a quick check to help you think through what to do next—not to make a decision for you.</p>
+            <p>Use a quick check to help you think through what to do next - not to make a decision for you.</p>
             <Link className="landing-text-link" href="/dashboard#scanner">Try a check now <ArrowRight size={15} /></Link>
           </div>
           <div className="steps-list">
@@ -121,8 +128,8 @@ export default function LandingPage() {
       </section>
 
       <section className="landing-privacy section-wrap" id="your-privacy">
-        <div className="privacy-art"><div className="privacy-ring"><ShieldCheck size={48} /></div><span className="privacy-check"><Check size={14} /></span><span className="privacy-spark spark-a">✳</span><span className="privacy-spark spark-b">✳</span></div>
-        <div className="privacy-copy"><span className="landing-eyebrow">YOUR INFORMATION MATTERS</span><h2>Useful checks.<br /><span>No false promises.</span></h2><p>SAFEPAI does not block payments, verify account ownership, or decide whether someone committed fraud. Risk scores are preliminary signals—not probabilities or proof.</p><div className="privacy-points"><span><Check size={15} /> Scan without an account</span><span><Check size={15} /> Your recent checks stay in your browser</span><span><Check size={15} /> Reports are private and marked unverified</span></div></div>
+        <div className="privacy-art"><div className="privacy-ring"><ShieldCheck size={48} /></div><span className="privacy-check"><Check size={14} /></span><span className="privacy-spark spark-a">*</span><span className="privacy-spark spark-b">*</span></div>
+        <div className="privacy-copy"><span className="landing-eyebrow">YOUR INFORMATION MATTERS</span><h2>Useful checks.<br /><span>No false promises.</span></h2><p>SAFEPAI does not block payments, verify account ownership, or decide whether someone committed fraud. Risk scores are preliminary signals - not probabilities or proof.</p><div className="privacy-points"><span><Check size={15} /> Scan without an account</span><span><Check size={15} /> Your recent checks stay in your browser</span><span><Check size={15} /> Reports are private and marked unverified</span></div></div>
       </section>
 
       <section className="landing-cta">
@@ -136,7 +143,7 @@ export default function LandingPage() {
 
       <footer className="landing-footer">
         <Link className="landing-brand footer-brand" href="/" aria-label="SAFEPAI home"><span className="landing-brand-mark"><ShieldCheck size={19} /></span><span>safe<span>pai</span><small>LITE</small></span></Link>
-        <span>© {new Date().getFullYear()} SAFEPAI Lite · A second look, before you act.</span>
+        <span>&copy; {new Date().getFullYear()} SAFEPAI Lite &middot; A second look, before you act.</span>
         <Link href="/dashboard#reporting"><FileText size={14} /> Report a scam</Link>
       </footer>
     </main>

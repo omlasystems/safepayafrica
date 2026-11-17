@@ -1,10 +1,11 @@
 import type { AnalysisResult, InputType } from "@/lib/analysis";
 import { riskLevelFor } from "@/lib/analysis";
+import { findPublicSourceNotices } from "@/lib/public-source-notices";
 
 const rules: Array<{ pattern: RegExp; indicator: string; points: number }> = [
   { pattern: /\b(guaranteed|risk[- ]free|no risk|100%\s*(?:profit|return))\b/i, indicator: "Guaranteed or risk-free return claims", points: 24 },
   { pattern: /\b(double|triple)\s+(?:your\s+)?(?:money|investment)\b/i, indicator: "Promises to rapidly multiply money", points: 24 },
-  { pattern: /\b(?:\d{2,})\s*%\s*(?:daily|weekly|monthly|return|profit)\b/i, indicator: "Unusually high or frequent investment returns", points: 28 },
+  { pattern: /\b(?:\d{2,})\s*%\s*(?:daily|weekly|monthly|every\s+(?:day|week|month)|returns?|profits?)\b/i, indicator: "Unusually high or frequent investment returns", points: 28 },
   { pattern: /\b(act now|urgent|immediately|last chance|limited time|within \d+ hours)\b/i, indicator: "Urgency or pressure tactics", points: 15 },
   { pattern: /\b(secret|keep this private|don't tell|do not tell|exclusive access)\b/i, indicator: "Secrecy or exclusivity pressure", points: 13 },
   { pattern: /\b(otp|one[- ]time password|pin|password|seed phrase|recovery phrase)\b/i, indicator: "Request for sensitive authentication information", points: 30 },
@@ -46,6 +47,7 @@ function urlIndicators(content: string): string[] {
 export function detectIndicators(content: string, inputType: InputType): Detection {
   const indicators = new Set<string>();
   let score = 0;
+  const publicNotices = findPublicSourceNotices(content);
   for (const rule of rules) {
     if (rule.pattern.test(content)) {
       indicators.add(rule.indicator);
@@ -60,6 +62,10 @@ export function detectIndicators(content: string, inputType: InputType): Detecti
         : indicator === "Website link does not use HTTPS"
           ? 14
           : 16;
+  }
+  for (const notice of publicNotices) {
+    indicators.add(`${notice.authority} notice: ${notice.name} — ${notice.summary}`);
+    score += 35;
   }
   if (inputType === "investment" && !/\b(regulat|license|prospectus|risk disclosure)\b/i.test(content)) {
     indicators.add("Investment offer does not mention independent regulation or risk disclosure");
@@ -104,6 +110,7 @@ export function provisionalResult(score: number, indicators: string[], inputType
     confidence: score >= 60 ? "medium" : "low",
     verification_status: "unverified",
     image_analysis_status: "not_requested",
+    public_sources: [],
     ai_used: false,
     provisional: true,
   };

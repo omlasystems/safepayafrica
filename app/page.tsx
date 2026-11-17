@@ -539,6 +539,21 @@ export default function Home() {
                       {result.detected_indicators.map((indicator) => <span key={indicator}><TriangleAlert size={13} /> {indicator}</span>)}
                     </div>
                   )}
+                  {result.public_sources.length > 0 && (
+                    <div className="public-source-list">
+                      <strong>Public-source records matching a name in this submission</strong>
+                      {result.public_sources.map((source) => (
+                        <article key={source.source_url}>
+                          <span>{source.authority} · {source.published_at}</span>
+                          <p>{source.summary}</p>
+                          <a href={source.source_url} target="_blank" rel="noreferrer">
+                            Read source: {source.title} <ArrowRight size={12} />
+                          </a>
+                        </article>
+                      ))}
+                      <small>A name match does not prove this offer, sender, or current activity is connected to the notice.</small>
+                    </div>
+                  )}
                   <div className="recommendation-box">
                     <strong><ShieldCheck size={15} /> Safer next steps</strong>
                     <ul>{result.recommendations.slice(0, 3).map((recommendation) => <li key={recommendation}>{recommendation}</li>)}</ul>
@@ -657,7 +672,7 @@ export default function Home() {
                 const fallback: AnalysisResult = result ?? {
                   risk_score: 0, risk_level: "low", is_suspicious: false, detected_indicators: [],
                   explanation: "No scan assessment was attached to this report.", recommendations: ["Contact your financial institution using its official channel."],
-                  confidence: "low", verification_status: "unverified", image_analysis_status: "not_requested", ai_used: false, provisional: true,
+                  confidence: "low", verification_status: "unverified", image_analysis_status: "not_requested", public_sources: [], ai_used: false, provisional: true,
                 };
                 downloadReport(fallback, report);
               }}><ArrowDownToLine size={14} /> Download report PDF without scan assessment</button>

@@ -177,6 +177,13 @@ h1 span { color: #00a978; }
 .indicator-list > strong { color: #59677b; font-size: 9px; }
 .indicator-list > span { align-items: flex-start; color: #6a7584; display: flex; font-size: 9px; gap: 6px; line-height: 1.45; }
 .indicator-list svg { color: #d39535; flex: 0 0 auto; margin-top: 1px; }
+.public-source-list { background: #f7f9fc; border: 1px solid #e6ebf0; border-radius: 6px; display: grid; gap: 8px; margin: 10px 0; padding: 10px; }
+.public-source-list > strong { color: #4b5c72; font-size: 9px; }
+.public-source-list article { border-top: 1px solid #e9edf2; padding-top: 8px; }
+.public-source-list article > span, .public-source-list article p, .public-source-list small { color: #7a8798; font-size: 9px; line-height: 1.5; }
+.public-source-list article p { margin: 4px 0; }
+.public-source-list article a { align-items: center; color: #168263; display: inline-flex; font-size: 9px; font-weight: 700; gap: 4px; }
+.public-source-list small { color: #929cab; }
 .recommendation-box { background: #fff; border: 1px solid #e9edf0; border-radius: 6px; padding: 9px 10px; }
 .recommendation-box > strong { align-items: center; color: #287c62; display: flex; font-size: 9px; gap: 5px; }
 .recommendation-box ul { color: #647286; font-size: 9px; line-height: 1.55; margin: 7px 0 0; padding-left: 16px; }

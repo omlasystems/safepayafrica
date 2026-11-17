@@ -23,8 +23,10 @@ SAFEPAI Lite is a mobile-friendly web application that helps people review suspi
 ### Fraud Detection Engine
 
 - Detects common urgency, payment, impersonation, suspicious-link, and unrealistic-return signals.
+- Checks text and AI-extracted screenshot text against seeded Supabase keyword rules; built-in rules keep guest scanning usable without Supabase.
 - Checks submitted URLs for unsafe schemes, IP-address hosts, misleading hostnames, and common URL shorteners; it does not fetch or crawl the submitted URL.
 - Can compare URLs and phone numbers with indicators whose status is `evidence_supported` or `independently_verified`. Unverified reports are never treated as confirmed matches.
+- Matches a small, source-linked set of public records: Nigerian SEC notices and a Daily Post Nigeria report of a 2023 Nigeria Police Force wanted notice concerning Chinmark Group's CEO. The Chinmark item reports allegations and a wanted notice, not a finding of guilt; its current case status is unknown. A name match does not prove that a submitted offer or sender is connected, and never marks the entity or report as verified.
 - Calls one configurable OpenAI-compatible multimodal Chat Completions endpoint only for suspicious or ambiguous submissions.
 - Validates the returned JSON before using it. If AI is not configured, unavailable, or returns invalid data, the API provides a clearly marked provisional, rules-only result.
 - Uses a short-lived, process-local cache keyed by a SHA-256 digest. The cache is not durable across serverless instances.
@@ -40,7 +42,7 @@ Risk bands:
 
 ### Scam Alert Database
 
-The Supabase SQL setup creates `users`, `scans`, `scam_reports`, and `scam_indicators`, enables Row Level Security, and limits each user to their own profile, scan history, and reports. Authenticated users can submit community reports; those reports start as `unverified`. Only independently approved indicators should be published as trusted indicators.
+The Supabase SQL setup creates `users`, `scans`, `scam_reports`, `scam_indicators`, and a read-only `scam_keywords` rule table protected by Row Level Security. The keyword table is seeded with common phrases related to guaranteed returns, urgency, OTP/PIN requests, upfront fees, and account-suspension threats. Authenticated users can submit community reports; those reports start as `unverified`. Only independently approved indicators should be published as trusted indicators.
 
 ### Fraud Report Generator
 
@@ -100,7 +102,8 @@ Never use a Supabase `service_role` key in this application or expose any AI key
 ## Supabase setup
 
 1. Create a Supabase project.
-2. In the SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql).
+2. In the SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql) for a new project. For an existing project, run [`supabase/migrations/20261117_add_scam_keywords.sql`](./supabase/migrations/20261117_add_scam_keywords.sql).
+   Client roles can read active rules but cannot edit them; manage rule changes through the Supabase SQL Editor.
 3. Configure the Supabase URL and anon/publishable key in `.env.local` and in Vercel project settings.
 4. Configure Supabase Auth email sign-in and allowed redirect URLs for localhost and the deployed domain.
 5. Test signup, signin, signout, scan history, and report submission using two different users to verify data isolation.
@@ -111,12 +114,14 @@ New reports are unverified. Review reports and supporting evidence through a sep
 
 1. The API validates the input type, text length, and optional image MIME type and size.
 2. Local rules assign a transparent preliminary score and indicators. The URL parser never requests a user-provided URL, avoiding server-side request forgery.
-3. If Supabase is configured, the API checks the submitted URL/phone against only evidence-supported or independently verified indicators.
-4. If the result is suspicious or ambiguous, or an image was submitted, one bounded request is made with only the submitted text and optional image. Ordinary, low-risk text submissions do not incur an AI request.
+3. If Supabase is configured, the API loads active keyword rules and checks submitted content, then checks URLs/phone numbers against only evidence-supported or independently verified indicators.
+4. If the result is suspicious or ambiguous, or an image was submitted, one bounded request is made with only the submitted text and optional image. For images, the vision model returns a limited text transcription; the same keyword rules are applied to that text. Ordinary, low-risk text submissions do not incur an AI request.
 5. The response is parsed and validated against the expected JSON structure. Scores and enumerated values are normalized before display.
-6. If AI is unavailable, the response is explicitly a provisional rules-only assessment.
+6. If AI is unavailable, the response is explicitly a provisional, rules-only assessment; an image is marked **Image not visually analyzed**, and no screenshot keyword check is claimed.
 
 The included API rate limiter and analysis cache are process-local starter protections. They can reset and are not shared across Vercel instances. For production, replace the rate limiter with a shared store/edge rate limit, monitor provider quotas, and set project-specific retention and privacy policies. Do not treat this starter as a regulated financial decision system.
+
+The initial public-source set is deliberately small and curated. It includes the Nigerian SEC's [Known Investment Scams schedule](https://sec.gov.ng/for-investors/known-investment-scams/), its [WayvePay notice](https://sec.gov.ng/for-investors/keep-track-of-circulars/suspected-fraudulent-activities-of-wayvepay/), and Daily Post Nigeria's [report of a Nigeria Police Force wanted notice concerning Chinmark Group's CEO](https://dailypost.ng/2023/04/12/police-declare-chinmark-ceo-wanted-over-alleged-n480m-fraud/). That article reports allegations and a wanted notice; it is not proof of guilt and does not establish the current case status. This list is not a live feed or exhaustive, and a matched name does not associate an offer or sender with the report. In a check of the cited SEC pages and Google/Bing News on 17 November 2026, I found no source naming Sidon Farms Limited; the application therefore does not label Sidon as a scam. Its submitted offer is still assessed for message-level warning signs. Confirm registration or report concerns with the SEC directly.
 
 ## Security and privacy
 

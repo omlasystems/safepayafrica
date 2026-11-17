@@ -4,6 +4,15 @@ export type Confidence = "low" | "medium" | "high";
 export type VerificationStatus = "unverified" | "evidence_supported" | "independently_verified";
 export type ImageAnalysisStatus = "not_requested" | "analyzed" | "not_analyzed";
 
+export interface PublicSourceReference {
+  entity_name: string;
+  authority: string;
+  title: string;
+  published_at: string;
+  summary: string;
+  source_url: string;
+}
+
 export interface AnalysisResult {
   risk_score: number;
   risk_level: RiskLevel;
@@ -14,6 +23,7 @@ export interface AnalysisResult {
   confidence: Confidence;
   verification_status: VerificationStatus;
   image_analysis_status: ImageAnalysisStatus;
+  public_sources: PublicSourceReference[];
   ai_used: boolean;
   provisional: boolean;
 }

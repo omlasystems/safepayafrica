@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SAFEPAI Lite — Scam protection, made simple",
-  description:
-    "Review suspicious messages, payment requests, investment offers, URLs, and screenshots before you act.",
+  title: "SAFEPAI Lite — Check before you pay",
+  description: "Get a clearer view of suspicious messages, websites, investment offers, and payment requests.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

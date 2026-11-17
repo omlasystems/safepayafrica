@@ -68,7 +68,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without credentials, the scanner uses rules-only analysis and saves up to eight recent checks in the current browser. Auth-backed history and community-report submissions require Supabase; the UI explains when it is not configured.
+Open [http://localhost:3000](http://localhost:3000) for the landing page, or [http://localhost:3000/dashboard](http://localhost:3000/dashboard) to use the scanner. Without credentials, the scanner uses rules-only analysis and saves up to eight recent checks in the current browser. Auth-backed history and community-report submissions require Supabase; the UI explains when it is not configured.
 
 ### Two-minute credential-free demo
 
@@ -169,7 +169,9 @@ app/
   api/analyze/route.ts    # rules-first, optional AI analysis endpoint
   globals.css             # Tailwind and SAFEPAI visual system
   layout.tsx
-  page.tsx                # scanner, history, alerts, reporting UI
+  page.tsx                # public landing page
+  dashboard/
+    page.tsx              # scanner, history, alerts, reporting UI
 lib/
   analysis.ts             # shared score types and validation
   detection.ts            # deterministic local detection rules

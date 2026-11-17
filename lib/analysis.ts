@@ -2,6 +2,7 @@ export type InputType = "message" | "website" | "investment" | "payment";
 export type RiskLevel = "low" | "moderate" | "high" | "very_high";
 export type Confidence = "low" | "medium" | "high";
 export type VerificationStatus = "unverified" | "evidence_supported" | "independently_verified";
+export type ImageAnalysisStatus = "not_requested" | "analyzed" | "not_analyzed";
 
 export interface AnalysisResult {
   risk_score: number;
@@ -12,6 +13,7 @@ export interface AnalysisResult {
   recommendations: string[];
   confidence: Confidence;
   verification_status: VerificationStatus;
+  image_analysis_status: ImageAnalysisStatus;
   ai_used: boolean;
   provisional: boolean;
 }

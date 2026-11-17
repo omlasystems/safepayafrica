@@ -79,6 +79,7 @@ function normalizeAiResult(value: unknown): AnalysisResult | null {
     recommendations: value.recommendations.slice(0, 6).map((text) => text.slice(0, 240)),
     is_suspicious: score >= 30,
     verification_status: "unverified",
+    image_analysis_status: "not_requested",
     ai_used: true,
     provisional: false,
   };
@@ -248,14 +249,16 @@ export async function POST(request: NextRequest) {
         is_suspicious: Math.max(score, aiResult.risk_score) >= 30,
         detected_indicators: [...new Set([...indicators, ...aiResult.detected_indicators])].slice(0, 10),
         verification_status: known.status ?? aiResult.verification_status,
+        image_analysis_status: body.image ? "analyzed" as const : "not_requested" as const,
       }
     : provisionalResult(score, indicators, body.inputType);
   if (known.status) result.verification_status = known.status;
   if (body.image && !aiResult) {
+    result.image_analysis_status = "not_analyzed";
     result.explanation =
-      "The screenshot could not be visually reviewed because AI analysis is unavailable. This rules-only assessment cannot determine what the image contains.";
+      "Image not visually analyzed. AI analysis is unavailable, so no visual content was checked and this result cannot indicate whether the screenshot is safe.";
     result.recommendations.unshift(
-      "Do not rely on this screenshot assessment; configure the optional image-analysis service or review it with a trusted adviser.",
+      "Do not rely on this screenshot for a risk assessment; configure the optional image-analysis service or review it with a trusted adviser.",
     );
   }
 

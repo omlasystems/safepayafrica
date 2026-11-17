@@ -24,7 +24,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   TriangleAlert,
-  Upload,
   WalletCards,
   X,
 } from "lucide-react";
@@ -74,6 +73,7 @@ function formatDate(value: string) {
 }
 
 function levelLabel(level: RiskLevel) {
+  if (level === "low") return "Low detected";
   return level === "very_high" ? "Very high" : level[0].toUpperCase() + level.slice(1);
 }
 
@@ -212,20 +212,24 @@ export default function Home() {
   const updateImage = (file?: File) => {
     if (!file) return;
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setResult(null);
       setNotice("Choose a PNG, JPEG, or WebP screenshot.");
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
+      setResult(null);
       setNotice("Screenshots must be 3 MB or smaller.");
       return;
     }
     setImage({ file, preview: URL.createObjectURL(file) });
+    setResult(null);
     setNotice("");
   };
 
   const submitScan = async (event: FormEvent) => {
     event.preventDefault();
     if (!content.trim() && !image) {
+      setResult(null);
       setNotice("Add a message, website, or screenshot to scan.");
       return;
     }
@@ -448,7 +452,12 @@ export default function Home() {
                       type="button"
                       role="tab"
                       aria-selected={inputType === value}
-                      onClick={() => setInputType(value)}
+                      disabled={loading}
+                      onClick={() => {
+                        setInputType(value);
+                        setResult(null);
+                        setNotice("");
+                      }}
                     >
                       <Icon size={15} /> {label}
                     </button>
@@ -459,7 +468,12 @@ export default function Home() {
                   id="scan-content"
                   className={inputType === "website" ? "url-input" : ""}
                   value={content}
-                  onChange={(event) => setContent(event.target.value)}
+                  disabled={loading}
+                  onChange={(event) => {
+                    setContent(event.target.value);
+                    setResult(null);
+                    setNotice("");
+                  }}
                   placeholder={selectedType.placeholder}
                   rows={5}
                   maxLength={10000}
@@ -472,9 +486,10 @@ export default function Home() {
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
                       className="sr-only"
+                      disabled={loading}
                       onChange={(event) => updateImage(event.target.files?.[0])}
                     />
-                    <button className="attach-button" type="button" onClick={() => fileInput.current?.click()}>
+                    <button className="attach-button" type="button" disabled={loading} onClick={() => fileInput.current?.click()}>
                       <FileImage size={16} /> Add screenshot
                     </button>
                     <span className="privacy-hint"><LockKeyhole size={12} /> Your scan is private</span>
@@ -486,7 +501,7 @@ export default function Home() {
                     {/* The preview is a locally selected user screenshot; no remote image URL is loaded. */}
                     <Image src={image.preview} alt="Screenshot selected for analysis" width={40} height={32} unoptimized />
                     <span><Check size={14} /> {image.file.name}</span>
-                    <button type="button" onClick={() => setImage(null)} aria-label="Remove screenshot"><X size={16} /></button>
+                    <button type="button" disabled={loading} onClick={() => { setImage(null); setResult(null); }} aria-label="Remove screenshot"><X size={16} /></button>
                   </div>
                 )}
                 {notice && <div className="notice" role="status">{notice}</div>}
@@ -504,13 +519,19 @@ export default function Home() {
                 <div className={`result-panel result-${result.risk_level}`} aria-live="polite">
                   <div className="result-header">
                     <div className="result-status-icon">
-                      {result.risk_score >= 60 ? <ShieldAlert size={21} /> : result.risk_score >= 30 ? <TriangleAlert size={21} /> : <ShieldCheck size={21} />}
+                      {result.image_analysis_status === "not_analyzed" ? <TriangleAlert size={21} /> : result.risk_score >= 60 ? <ShieldAlert size={21} /> : result.risk_score >= 30 ? <TriangleAlert size={21} /> : <ShieldCheck size={21} />}
                     </div>
-                    <div className="result-title"><strong>{result.risk_score >= 60 ? "Pause — warning signs found" : result.risk_score >= 30 ? "Take care — review this carefully" : "No known warning signs detected"}</strong><span>Preliminary assessment · {result.ai_used ? "AI-assisted" : "Rules-only"}</span></div>
-                    <RiskBadge level={result.risk_level} />
+                    <div className="result-title"><strong>{result.image_analysis_status === "not_analyzed" ? "Image not visually analyzed" : result.risk_score >= 60 ? "Pause — warning signs found" : result.risk_score >= 30 ? "Take care — review this carefully" : "No known warning signs detected"}</strong><span>{result.provisional ? "Provisional rules-only assessment" : "Preliminary AI-assisted assessment"}</span></div>
+                    {result.image_analysis_status === "not_analyzed" ? <span className="risk-badge risk-moderate">Image not checked</span> : <RiskBadge level={result.risk_level} />}
                   </div>
-                  <div className="score-row"><span>Preliminary risk score</span><strong>{result.risk_score}<small>/100</small></strong></div>
-                  <div className="score-track"><span style={{ width: `${result.risk_score}%` }} /></div>
+                  {result.image_analysis_status === "not_analyzed" ? (
+                    <div className="image-unavailable-note">No visual content was checked. This result cannot indicate whether the screenshot is safe.</div>
+                  ) : (
+                    <>
+                      <div className="score-row"><span>Preliminary heuristic risk score</span><strong>{result.risk_score}<small>/100</small></strong></div>
+                      <div className="score-track"><span style={{ width: `${result.risk_score}%` }} /></div>
+                    </>
+                  )}
                   <p className="result-explanation">{result.explanation}</p>
                   {result.detected_indicators.length > 0 && (
                     <div className="indicator-list">
@@ -636,7 +657,7 @@ export default function Home() {
                 const fallback: AnalysisResult = result ?? {
                   risk_score: 0, risk_level: "low", is_suspicious: false, detected_indicators: [],
                   explanation: "No scan assessment was attached to this report.", recommendations: ["Contact your financial institution using its official channel."],
-                  confidence: "low", verification_status: "unverified", ai_used: false, provisional: true,
+                  confidence: "low", verification_status: "unverified", image_analysis_status: "not_requested", ai_used: false, provisional: true,
                 };
                 downloadReport(fallback, report);
               }}><ArrowDownToLine size={14} /> Download report PDF without scan assessment</button>

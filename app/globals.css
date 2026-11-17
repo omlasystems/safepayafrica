@@ -186,6 +186,7 @@ h1 span { color: #00a978; }
 .result-bottom > span svg { color: #69a890; }
 .result-bottom button { align-items: center; background: transparent; border: 0; color: #168263; display: flex; font-size: 9px; font-weight: 700; gap: 4px; padding: 3px 0; }
 .result-disclaimer { color: #9aa3ae; font-size: 8px; line-height: 1.5; margin: 9px 0 0; }
+.image-unavailable-note { background: #fff; border: 1px solid #f1e4c9; border-radius: 6px; color: #8a682e; font-size: 10px; line-height: 1.5; margin-top: 13px; padding: 9px 10px; }
 
 .history-card { margin-top: 17px; padding: 17px 19px 13px; }
 .history-heading { align-items: center; display: flex; justify-content: space-between; }

@@ -17,7 +17,7 @@ SAFEPAI Lite is a mobile-friendly web application that helps people review suspi
 ### Screenshot Analyzer
 
 - Upload PNG, JPEG, or WebP screenshots up to 3 MB.
-- The analyzer sends an image to the configured vision-capable AI only when local text indicators or uncertainty warrant review.
+- When configured, the analyzer sends an image in a single request to the vision-capable AI. Without a working AI service it says **Image not visually analyzed** and does not present the screenshot as checked or safe.
 - Uploaded image bytes are processed in the request and are not written to Supabase Storage by this starter.
 
 ### Fraud Detection Engine
@@ -69,6 +69,22 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Without credentials, the scanner uses rules-only analysis, and auth-backed history/report submissions are unavailable. The UI explains when Supabase is not configured.
 
+### Two-minute credential-free demo
+
+Terminal 1:
+
+```bash
+env -u NEXT_PUBLIC_SUPABASE_URL -u NEXT_PUBLIC_SUPABASE_ANON_KEY -u AI_API_KEY npm run dev
+```
+
+Terminal 2:
+
+```bash
+npm run test:smoke
+```
+
+Then open `http://localhost:3000`, choose **Investment offer**, paste `Guaranteed 30% returns every day and double your investment in one week.`, and click **Check for scams**. The result uses server-side rules and is explicitly provisional. The smoke script checks the six rules-only API cases; image analysis without an AI key is explicitly unavailable rather than presented as a checked or safe screenshot.
+
 ## Environment variables
 
 | Variable | Required | Purpose |
@@ -96,7 +112,7 @@ New reports are unverified. Review reports and supporting evidence through a sep
 1. The API validates the input type, text length, and optional image MIME type and size.
 2. Local rules assign a transparent preliminary score and indicators. The URL parser never requests a user-provided URL, avoiding server-side request forgery.
 3. If Supabase is configured, the API checks the submitted URL/phone against only evidence-supported or independently verified indicators.
-4. If the result is suspicious or ambiguous and AI is configured, one bounded request is made with only the submitted text and optional image. Ordinary, low-risk text submissions do not incur an AI request.
+4. If the result is suspicious or ambiguous, or an image was submitted, one bounded request is made with only the submitted text and optional image. Ordinary, low-risk text submissions do not incur an AI request.
 5. The response is parsed and validated against the expected JSON structure. Scores and enumerated values are normalized before display.
 6. If AI is unavailable, the response is explicitly a provisional rules-only assessment.
 

@@ -54,7 +54,12 @@ export function detectIndicators(content: string, inputType: InputType): Detecti
   }
   for (const indicator of urlIndicators(content)) {
     indicators.add(indicator);
-    score += indicator === "Website link does not use HTTPS" ? 14 : 16;
+    score +=
+      indicator === "Website uses a shortened link that hides its destination"
+        ? 30
+        : indicator === "Website link does not use HTTPS"
+          ? 14
+          : 16;
   }
   if (inputType === "investment" && !/\b(regulat|license|prospectus|risk disclosure)\b/i.test(content)) {
     indicators.add("Investment offer does not mention independent regulation or risk disclosure");
@@ -98,6 +103,7 @@ export function provisionalResult(score: number, indicators: string[], inputType
     recommendations: [...new Set(recommendations)],
     confidence: score >= 60 ? "medium" : "low",
     verification_status: "unverified",
+    image_analysis_status: "not_requested",
     ai_used: false,
     provisional: true,
   };
